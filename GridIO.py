@@ -34,6 +34,7 @@ def GetGeoGrid(FileName):
     # Get the projection
     Projection = osr.SpatialReference()
     Projection.ImportFromWkt(SourceDS.GetProjectionRef())
+    print 'Source Projection is\n',SourceDS.GetProjection()
     # Get the band data type
     SourceType = SourceBand.DataType
     print 'Source Band Type=',gdal.GetDataTypeName(SourceType)
@@ -84,8 +85,8 @@ def CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArra
 # Return 0 if successful
 
 
-FileName       =   'can1k_NAD83_crop01.tiff'
-TargetFileName =   'can1k_NAD83_crop01_modified.tiff'
+FileName       =   'can1k_mag_NAD83_crop01_proj.tiff'
+TargetFileName =   'can1k_mag_NAD83_crop01_proj_modified.tiff'
 
 # Import
 GeoT, Projection, Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
