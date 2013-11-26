@@ -11,6 +11,7 @@ from gdalconst import GA_ReadOnly
 
 
 def GetGeoGrid(FileName):
+    print '\nImporting'
     # Open source file
     SourceDS = gdal.Open(FileName, GA_ReadOnly)
     # Count number of data bands
@@ -23,7 +24,7 @@ def GetGeoGrid(FileName):
     SourceBand = SourceDS.GetRasterBand(1)
     # Compute first band stats
     SourceStats = SourceBand.ComputeStatistics(0)
-    print '[ Min, Max, Mean, Std Dev ] =\n', SourceStats
+    print 'Source [ Min, Max, Mean, Std Dev ] =\n', SourceStats
     # Get no data value
     NDV = SourceBand.GetNoDataValue()
     # Get raster size
@@ -31,6 +32,11 @@ def GetGeoGrid(FileName):
     ysize = SourceDS.RasterYSize
     # Get the geographic transformation
     GeoT = SourceDS.GetGeoTransform()
+    # Get raster origin and resolution
+    SourceOriginX = GeoT[0]
+    SourceOriginY = GeoT[3]
+    SourcePixelWidth = GeoT[1]
+    SourcePixelHeight = GeoT[5]
     # Get the projection
     Projection = osr.SpatialReference()
     Projection.ImportFromWkt(SourceDS.GetProjectionRef())
@@ -41,12 +47,15 @@ def GetGeoGrid(FileName):
     # Write the raster band as a numpy array
     SourceArray = SourceBand.ReadAsArray(0, 0, xsize, ysize)
     print 'Source Array type ', type(SourceArray),'\nSource Array size ', SourceArray.shape
-    return  GeoT, Projection, Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats
+    return  SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, \
+    Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats
 # To use: 
-# GeoT, Projection, Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
+# SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, \
+#    Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
     
     
 def CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV):
+    print '\nExporting'
     # Open source file
     SourceDs = gdal.Open(FileName, GA_ReadOnly)
     # Get source file driver
@@ -77,25 +86,10 @@ def CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArra
     TargetBand.SetNoDataValue(NDV)
     # Compute first band stats
     TargetStats = TargetBand.ComputeStatistics(0)
-    print '[ Min, Max, Mean, Std Dev ] =\n', TargetStats
+    print 'Target [ Min, Max, Mean, Std Dev ] =\n', TargetStats
     del TargetArray 
     return 0
 # To use: 
 # CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray)
 # Return 0 if successful
-
-
-FileName       =   'can1k_mag_NAD83_crop01_proj.tiff'
-TargetFileName =   'can1k_mag_NAD83_crop01_proj_modified.tiff'
-
-# Import
-GeoT, Projection, Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
-
-# Modify array
-TargetArray = SourceArray + 1000
-
-TargetType = SourceType
-
-# Export
-CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV)
 
