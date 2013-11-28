@@ -83,6 +83,9 @@ def CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArra
         sys.exit(1)
     # Flush data to disk, set the NoData value and calculate stats
     TargetBand.FlushCache()
+    # Set default no data value
+    if NDV is None:
+        NDV = -99999
     TargetBand.SetNoDataValue(NDV)
     # Compute first band stats
     TargetStats = TargetBand.ComputeStatistics(0)
