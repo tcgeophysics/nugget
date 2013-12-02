@@ -1,0 +1,23 @@
+Copyright of Her Majesty the Queen in Right of Canada, 2010. 
+
+
+Aeromagnetic Data
+
+Citation: 2013:
+Canadian Aeromagnetic Data Base,
+Airborne Geophysics Section,
+GSC - Central Canada Division,
+Geological Survey of Canada,
+Earth Sciences Sector,
+Natural Resources Canada
+
+
+Gravity Data
+
+Citation: 2013:
+Canadian Geodetic Information System,
+Gravity & Geodetic Networks Section,
+Geodetic Survey Division,
+Geomatics Canada,
+Earth Sciences Sector,
+Natural Resources Canada
