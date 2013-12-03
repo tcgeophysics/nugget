@@ -17,6 +17,7 @@ from numpy import percentile
 def ArrayPlot(SourceArray, TargetArray,SourceOriginX, SourceOriginY, \
 SourcePixelWidth, SourcePixelHeight, SameCB):
     
+    
     SourceArrayShape = SourceArray.shape
     TargetArrayShape = TargetArray.shape
     
@@ -32,23 +33,35 @@ SourcePixelWidth, SourcePixelHeight, SameCB):
     xmax = SourceOriginX + xsize * SourcePixelWidth
     ymax = SourceOriginY + ysize * SourcePixelHeight
     ymin = SourceOriginY    
+    SourceBandMinpc = round(percentile (SourceArray,10),-1)
+    SourceBandMaxpc = round(percentile (SourceArray,90), -1)
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
     
     
     if SameCB==True:
-        SourceBandMinpc = round(percentile (SourceArray,10),-1)
-        SourceBandMaxpc = round(percentile (SourceArray,90), -1)
+#        SourceBandMinpc = round(percentile (SourceArray,10),-1)
+#        SourceBandMaxpc = round(percentile (SourceArray,90), -1)
          
         print SourceBandMinpc, SourceBandMaxpc
         
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
+#        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
         fig.suptitle('Upward continuation', fontsize=16)
         ax1.set_title('Source array')
         im1 = ax1.imshow(SourceArray, extent=[xmin, xmax, ymin, ymax], aspect='equal',\
         vmin=SourceBandMinpc, vmax=SourceBandMaxpc, cmap=cm.jet)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
         
+
         ax2.set_title('Target array')
         im2 = ax2.imshow(TargetArray, extent=[xmin, xmax, ymin, ymax], aspect='equal',\
         vmin=SourceBandMinpc, vmax=SourceBandMaxpc, cmap=cm.jet)
+        ax2.spines['right'].set_visible(False)
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['left'].set_visible(False)
+        ax2.spines['bottom'].set_visible(False)
         
         fig.subplots_adjust(right=0.8)
         cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -56,22 +69,46 @@ SourcePixelWidth, SourcePixelHeight, SameCB):
         cb.set_label('nT or mGal')
         
     if SameCB==False:
-        fig = plt.figure(figsize=(16,6))
-        fig.suptitle('Upward continuation', fontsize=16)
+        TargetBandMinpc = percentile (TargetArray,10)
+        TargetBandMaxpc = percentile (TargetArray,90)
+#        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
+
+        ax1.set_title('Source array')
+        im1 = ax1.imshow(SourceArray, extent=[xmin, xmax, ymin, ymax], aspect='equal',\
+        vmin=SourceBandMinpc, vmax=SourceBandMaxpc, cmap=cm.jet)
+        fig.colorbar(im1, ax=ax1, shrink=0.9)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
         
-        plt.subplot(121)
-        plt.imshow(SourceArray, extent=[xmin, xmax, ymin, ymax], aspect='equal', cmap=cm.jet)
-        #plt.axis([xmin, xmax, ymin, ymax])
-        plt.title("Source array")
-        cb = plt.colorbar()
-        cb.set_label('nT or mGal')
+
+        ax2.set_title('Target array')
+        im2 = ax2.imshow(TargetArray, extent=[xmin, xmax, ymin, ymax], aspect='equal',\
+        vmin=TargetBandMinpc, vmax=TargetBandMaxpc, cmap=cm.jet)
+        fig.colorbar(im2, ax=ax2, shrink=0.9)
+        ax2.spines['right'].set_visible(False)
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['left'].set_visible(False)
+        ax2.spines['bottom'].set_visible(False)
         
-        plt.subplot(122)
-        plt.imshow(TargetArray, extent=[xmin, xmax, ymin, ymax], aspect='equal', cmap=cm.jet)
-        plt.title("Target array")
-        cb = plt.colorbar()
-        cb.set_label('Processed unit')
-        
+#        fig = plt.figure(figsize=(16,6))
+#        fig.suptitle('Upward continuation', fontsize=16)
+#        
+#        plt.subplot(121)
+#        plt.imshow(SourceArray, extent=[xmin, xmax, ymin, ymax], aspect='equal', cmap=cm.jet)
+#        #plt.axis([xmin, xmax, ymin, ymax])
+#        plt.title("Source array")
+#        cb = plt.colorbar()
+#        cb.set_label('nT or mGal')
+#        
+#        plt.subplot(122)
+#        plt.imshow(TargetArray, extent=[xmin, xmax, ymin, ymax], aspect='equal', cmap=cm.jet)
+#        plt.title("Target array")
+#        cb = plt.colorbar()
+#        cb.set_label('Processed unit')
+    
+
     fig.show()
         
 
