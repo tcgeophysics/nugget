@@ -3,23 +3,23 @@
 Created on Thu Nov 28 14:07:21 2013
 
 @author: thomascampagne
+
+Working code of upward continuation
+Edge effect in output
 """
-
-
-
 
 from numpy import linspace ,zeros, real
 from scipy.fftpack import fft2 , fftfreq, ifft2
 from cmath import pi, exp
 from math import pow, sqrt
 from GridIO import GetGeoGrid, CreateGeoGrid
-
+from GridPlot import ArrayPlot
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
-TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_prol.tiff'
+TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_cont.tiff'
 
 #FileName       =   'data/CAN_Bouguer_NAD83_crop02_UTM.tiff'
-#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_cont.tiff'
 
 
 zp = -1000 # zp < 0 moves away from sources
@@ -98,6 +98,10 @@ TempArray_proc = real(TempArray_proc)
 TargetArray = TempArray_proc
 TargetType = SourceType
 NDV = -99999
+
+# Plot array
+ArrayPlot(SourceArray, TargetArray,SourceOriginX, SourceOriginY, \
+SourcePixelWidth, SourcePixelHeight, SameCB=True)
 
 # Export
 CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV)

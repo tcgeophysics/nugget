@@ -3,23 +3,26 @@
 Created on Thu Nov 28 14:07:21 2013
 
 @author: thomascampagne
+
+Working code of upward continuation
+Edge effect in output
+Need to extrapolate around array to limit edge effects
 """
-
-
-
 
 from numpy import linspace ,zeros, real
 from scipy.fftpack import fft2 , fftfreq, ifft2
 from cmath import pi, exp
 from math import pow, sqrt
 from GridIO import GetGeoGrid, CreateGeoGrid
+from GridPlot import ArrayPlot
+
 
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
-TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_prol.tiff'
+TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_contpad.tiff'
 
 #FileName       =   'data/CAN_Bouguer_NAD83_crop02_UTM.tiff'
-#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_cont.tiff'
 
 
 zp = -1000 # zp < 0 moves away from sources
@@ -36,14 +39,15 @@ Nr = TempArrayShape [0] #y length
 
 # assign some real spatial co-ordinates to the grid points   
 # first define the edge values
-x_min = SourceOriginX
-x_max = SourceOriginX + xsize * SourcePixelWidth
-y_min = SourceOriginY
+# Origin is the top left corner of the top left pixel of the raster.
+x_min = SourceOriginX - SourcePixelWidth
+x_max = SourceOriginX - SourcePixelWidth + xsize * SourcePixelWidth
+y_min = SourceOriginY + SourcePixelHeight
 y_max = SourceOriginY + ysize * SourcePixelHeight
 
 # then create some empty 2d arrays to hold the individual cell values
-x_array = zeros( TempArrayShape , dtype = float )
-y_array = zeros( TempArrayShape , dtype = float )
+x_array = zeros( (Nr,Nc) , dtype = float )
+y_array = zeros( (Nr,Nc) , dtype = float )
 
 # now fill the arrays with the associated values
 for row , y_value in enumerate(linspace (y_min , y_max , num = Nr) ):
@@ -65,14 +69,14 @@ n_value = fftfreq( Nr , (1.0 / float(Nr) ) )
 m_value = fftfreq( Nc , (1.0 / float(Nc) ) )
 
 # now we can initialize some arrays to hold the wavenumber co-ordinates of each cell
-kx_array = zeros( TempArrayShape , dtype = float )
-ky_array = zeros( TempArrayShape , dtype = float )
-TempArray_wavedomain_proc = zeros( TempArrayShape , dtype = complex )
+kx_array = zeros( (Nr,Nc) , dtype = float )
+ky_array = zeros( (Nr,Nc) , dtype = float )
+TempArray_wavedomain_proc = zeros( (Nr,Nc) , dtype = complex )
 # before we can calculate the wavenumbers we need to know the total length of the spatial
 # domain data in x and y. This assumes that the spatial domain units are metres and
 # will result in wavenumber domain units of radians / metre.
 x_length = xsize * SourcePixelWidth
-y_length = ysize * SourcePixelHeight
+y_length = xsize * SourcePixelHeight 
 
 # now the loops to calculate the wavenumbers
 for row in xrange(Nr):
@@ -89,7 +93,7 @@ for row in xrange(Nr):
         TempArray_wavedomain_proc [row][column] = TempArray_wavedomain [row][column] * exp(kw*zp)
 
 
-TempArray_proc = ifft2(TempArray_wavedomain_proc)
+TempArray_proc = ifft2(TempArray_wavedomain_proc,TempArrayShape)
 TempArray_proc = real(TempArray_proc)
 #print amax(TempArray_proc)
 #print amin(TempArray_proc)
@@ -98,6 +102,10 @@ TempArray_proc = real(TempArray_proc)
 TargetArray = TempArray_proc
 TargetType = SourceType
 NDV = -99999
+
+# Plot array
+ArrayPlot(SourceArray, TargetArray,SourceOriginX, SourceOriginY, \
+SourcePixelWidth, SourcePixelHeight, SameCB=True)
 
 # Export
 CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV)

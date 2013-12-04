@@ -1,29 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 28 14:07:21 2013
-
-@author: thomascampagne
+TC, Nov 29, 2013
+Suite of 2D filters to process 2D numpy arrays from GridIO.py
 """
-
-
-
-
-from numpy import linspace ,zeros, real
+from numpy import linspace ,zeros, real, nan_to_num, isnan, min
 from scipy.fftpack import fft2 , fftfreq, ifft2
+from numpy.fft import irfft2
 from cmath import pi, exp
-from math import pow, sqrt
+from math import pow, sqrt, sin, cos
 from GridIO import GetGeoGrid, CreateGeoGrid
 
-
-FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
-TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_prol.tiff'
-
-#FileName       =   'data/CAN_Bouguer_NAD83_crop02_UTM.tiff'
-#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+# IO functions: 
+# GeoT, Projection, Bands, SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
+# CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray)
+# Return 0 if successful
 
 
-zp = -1000 # zp < 0 moves away from sources
 
+
+FileName       =   'can1k_mag_NAD83_crop02_UTM.tiff'
+TargetFileName =   'can1k_mag_NAD83_crop02_UTM_RTP.tiff'
+
+#FileName       =   'CAN_Bouguer_NAD83_crop02_UTM.tiff'
+#TargetFileName =   'CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+
+# Champ magnetique regional (123W 55N - IGRF 2010)
+D = 18.595*pi/180      # declination
+I = 74.564*pi/180     # inclination
+F = 56912             # intensity
+print D, I, F
+# Champ magnetique regional
+l = F*cos(I)*cos(D)
+m = F*cos(I)*sin(D)
+n = F*sin(I)
+print l, m, n
 # Import data
 SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
 SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
@@ -74,6 +84,10 @@ TempArray_wavedomain_proc = zeros( TempArrayShape , dtype = complex )
 x_length = xsize * SourcePixelWidth
 y_length = ysize * SourcePixelHeight
 
+nafn = 0
+kx = 0
+ky = 0
+
 # now the loops to calculate the wavenumbers
 for row in xrange(Nr):
     
@@ -86,10 +100,18 @@ for row in xrange(Nr):
 # of the correspoing point in some_data_wavedomain
         kw = sqrt(pow(kx_array[row][column],2)+pow(ky_array[row][column],2))
         
-        TempArray_wavedomain_proc [row][column] = TempArray_wavedomain [row][column] * exp(kw*zp)
+        TempArray_wavedomain_proc [row][column] = TempArray_wavedomain [row][column] *\
+        (1j * kw /(l*kx_array[row][column] + m*ky_array[row][column] + 1j*n*kw))
+        
+        if isnan(TempArray_wavedomain_proc [row][column]) == True:
+            nafn+=1
+            kx = column
+            ky = row
 
-
-TempArray_proc = ifft2(TempArray_wavedomain_proc)
+print TempArray_wavedomain_proc
+print 'nan = ', nafn, 'kx = ', kx, ' ky = ', ky
+TempArray_proc = ifft2(nan_to_num(TempArray_wavedomain_proc)) # Nan values in wavenumber domain!!!
+print TempArray_proc
 TempArray_proc = real(TempArray_proc)
 #print amax(TempArray_proc)
 #print amin(TempArray_proc)

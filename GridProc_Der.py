@@ -3,6 +3,9 @@
 Created on Thu Nov 28 14:07:21 2013
 
 @author: thomascampagne
+
+Working code of derivative
+Edge effect in output
 """
 
 
@@ -11,18 +14,27 @@ Created on Thu Nov 28 14:07:21 2013
 from numpy import linspace ,zeros, real
 from scipy.fftpack import fft2 , fftfreq, ifft2
 from cmath import pi, exp
-from math import pow, sqrt
+from math import pow, sqrt, cos, sin
 from GridIO import GetGeoGrid, CreateGeoGrid
-
+from GridPlot import ArrayPlot
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
-TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_prol.tiff'
+TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_der1.tiff'
 
 #FileName       =   'data/CAN_Bouguer_NAD83_crop02_UTM.tiff'
-#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_der1.tiff'
 
+# Champ magnetique regional
+D = 0*pi/180      # declination
+I = 90*pi/180     # inclination
+F = 1             # intensity
+# Champ magnetique regional
+l = F*cos(I)*cos(D)
+m = F*cos(I)*sin(D)
+n = F*sin(I)
 
-zp = -1000 # zp < 0 moves away from sources
+# Ordre de la derivee si n positif, ou de l'integration si n negatif 
+dn = 1
 
 # Import data
 SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
@@ -86,8 +98,10 @@ for row in xrange(Nr):
 # of the correspoing point in some_data_wavedomain
         kw = sqrt(pow(kx_array[row][column],2)+pow(ky_array[row][column],2))
         
-        TempArray_wavedomain_proc [row][column] = TempArray_wavedomain [row][column] * exp(kw*zp)
-
+        # derivative
+        TempArray_wavedomain_proc [row][column] = \
+        TempArray_wavedomain [row][column] * \
+        (-2*pi*1j*(l*kx_array[row][column]+m*ky_array[row][column]-1j*n*kw))**dn
 
 TempArray_proc = ifft2(TempArray_wavedomain_proc)
 TempArray_proc = real(TempArray_proc)
@@ -98,6 +112,11 @@ TempArray_proc = real(TempArray_proc)
 TargetArray = TempArray_proc
 TargetType = SourceType
 NDV = -99999
+
+
+# Plot array
+ArrayPlot(SourceArray, TargetArray,SourceOriginX, SourceOriginY, \
+SourcePixelWidth, SourcePixelHeight, SameCB=False)
 
 # Export
 CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV)

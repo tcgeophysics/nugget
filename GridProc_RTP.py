@@ -3,6 +3,9 @@
 Created on Thu Nov 28 14:07:21 2013
 
 @author: thomascampagne
+
+Working code of derivative
+Edge effect in output
 """
 
 
@@ -11,18 +14,27 @@ Created on Thu Nov 28 14:07:21 2013
 from numpy import linspace ,zeros, real
 from scipy.fftpack import fft2 , fftfreq, ifft2
 from cmath import pi, exp
-from math import pow, sqrt
+from math import pow, sqrt, cos, sin
 from GridIO import GetGeoGrid, CreateGeoGrid
 
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
-TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_prol.tiff'
+TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_der1.tiff'
 
 #FileName       =   'data/CAN_Bouguer_NAD83_crop02_UTM.tiff'
-#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_prol.tiff'
+#TargetFileName =   'data/CAN_Bouguer_NAD83_crop02_UTM_der1.tiff'
 
+# Champ magnetique regional
+D = 0*pi/180      # declination
+I = 90*pi/180     # inclination
+F = 1             # intensity
+# Champ magnetique regional
+l = F*cos(I)*cos(D)
+m = F*cos(I)*sin(D)
+n = F*sin(I)
 
-zp = -1000 # zp < 0 moves away from sources
+# Ordre de la derivee si n positif, ou de l'integration si n negatif 
+dn = 1
 
 # Import data
 SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
@@ -85,8 +97,16 @@ for row in xrange(Nr):
 # now for any row,column pair kx_array , and ky_array will hold the wavedomain coordinates
 # of the correspoing point in some_data_wavedomain
         kw = sqrt(pow(kx_array[row][column],2)+pow(ky_array[row][column],2))
-        
-        TempArray_wavedomain_proc [row][column] = TempArray_wavedomain [row][column] * exp(kw*zp)
+        # Reduction au pole du vecteur champ magnetique
+        A = (l*kx_array[row][column] + m*ky_array[row][column] + 1j*n*kw)
+
+        TempArray_wavedomain_proc [row][column] = \
+        TempArray_wavedomain [row][column] * \
+        1j * kw / A
+       
+
+# np.isnan(np.sum(x))
+# np.nan_to_num()
 
 
 TempArray_proc = ifft2(TempArray_wavedomain_proc)
