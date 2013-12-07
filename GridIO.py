@@ -37,6 +37,8 @@ def GetGeoGrid(FileName):
     SourceOriginY = GeoT[3]
     SourcePixelWidth = GeoT[1]
     SourcePixelHeight = GeoT[5]
+    print 'Upper left corner (x , y) = (',SourceOriginX,', ',SourceOriginY,',)'
+    print 'Pixel dimension (width, height) = (',SourcePixelWidth,', ',SourcePixelHeight,',)'
     # Get the projection
     Projection = osr.SpatialReference()
     Projection.ImportFromWkt(SourceDS.GetProjectionRef())
@@ -91,6 +93,7 @@ def CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArra
     TargetStats = TargetBand.ComputeStatistics(0)
     print 'Target [ Min, Max, Mean, Std Dev ] =\n', TargetStats
     del TargetArray 
+    del TargetStats
     return 0
 # To use: 
 # CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray)

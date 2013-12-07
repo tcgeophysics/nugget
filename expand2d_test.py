@@ -10,8 +10,10 @@ Testing stsci.imagemanip.interp2d.expand2d
 from GridIO import GetGeoGrid
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from stsci_imagemanip.interp2d import expand2d
+from stsci.imagemanip.interp2d import expand2d
+import stsci
 
+stsci.imagemanip.interp2d.expand2d()
 
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'

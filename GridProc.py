@@ -4,7 +4,7 @@ TC, Nov 29, 2013
 Suite of 2D filters to process 2D numpy arrays from GridIO.py
 """
 from numpy import linspace ,zeros, real
-from scipy.fftpack import fft2 , fftfreq, ifft2
+from scipy.fftpack import fft2 , fftfreq, ifft2, fftshift
 from cmath import pi, exp
 from math import pow, sqrt, cos, sin
 from GridIO import GetGeoGrid, CreateGeoGrid
@@ -16,9 +16,7 @@ from GridIO import GetGeoGrid, CreateGeoGrid
 
 
 
-# Import data
-SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
-SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
+
 
 def PrepArray2Fourier (xsize, ysize, SpatialArray, ArrayOriginX, \
 ArrayOriginY, ArrayResolutionX, ArrayResolutionY):
@@ -30,19 +28,17 @@ ArrayOriginY, ArrayResolutionX, ArrayResolutionY):
     
     # assign some real spatial co-ordinates to the grid points   
     # first define the edge values
-    x_min = ArrayOriginX
-    x_max = ArrayOriginX + xsize * ArrayResolutionX
-    y_min = ArrayOriginY
-    y_max = ArrayOriginY + ysize * ArrayResolutionY
-    
+
     # then create some empty 2d arrays to hold the individual cell values
     x_array = zeros( SpatialArrayShape , dtype = float )
     y_array = zeros( SpatialArrayShape , dtype = float )
     
     # now fill the arrays with the associated values
-    for row , y_value in enumerate(linspace (y_min , y_max , num = Nr) ):
+    for row , y_value in enumerate(linspace (ArrayOriginY , ArrayOriginY + \
+    ysize * ArrayResolutionY , num = Nr) ):
         
-        for column , x_value in enumerate(linspace (x_min , x_max , num = Nc) ):
+        for column , x_value in enumerate(linspace (ArrayOriginX , \
+        ArrayOriginX + xsize * ArrayResolutionX , num = Nc) ):
 
             x_array[row][column] = x_value
             y_array[row][column] = y_value
@@ -108,8 +104,13 @@ F = 1             # intensity
 l = F*cos(I)*cos(D)
 m = F*cos(I)*sin(D)
 n = F*sin(I)
+
+# Import data
+SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
+SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
+
 # Ordre de la derivee si n positif, ou de l'integration si n negatif 
-n = 1
+dn = 1
 
 Nr, Nc, x_length, y_length, kx_array, ky_array, n_value, m_value =\
 PrepArray2Fourier (xsize, ysize, SourceArray, SourceOriginX, SourceOriginY, \
@@ -117,8 +118,8 @@ SourcePixelWidth, SourcePixelHeight)
 
 WaveDomainArray, WaveDomainArray_proc = Arrayfft2(SourceArray)
 
-WaveDomainArray_prol = WaveDomainArray_proc
-WaveDomainArray_der1 = WaveDomainArray_proc
+#WaveDomainArray_prol = WaveDomainArray_proc
+#WaveDomainArray_der1 = WaveDomainArray_proc
 WaveDomainArray_RTP  = WaveDomainArray_proc
 # now the loops to calculate the wavenumbers
 for row in xrange(Nr):
@@ -133,31 +134,35 @@ for row in xrange(Nr):
         kw = sqrt(pow(kx_array[row][column],2)+pow(ky_array[row][column],2))
         
         # continuation
-        WaveDomainArray_prol [row][column] = \
-        WaveDomainArray [row][column] * exp(kw*zp)
+#        WaveDomainArray_prol [row][column] = \
+#        WaveDomainArray [row][column] * exp(kw*zp)
         
         # derivative
-        WaveDomainArray_der1 [row][column] = \
-        WaveDomainArray [row][column] * \
-        (-2*pi*1j*(l*kx_array[row][column]+m*ky_array[row][column]-1j*n*kw))**n
+#        WaveDomainArray_der1 [row][column] = \
+#        WaveDomainArray [row][column] * \
+#        (-2*pi*1j*(l*kx_array[row][column]+m*ky_array[row][column]-1j*n*kw))**dn
         
 #        # Reduction au pole du vecteur champ magnetique
-#        WaveDomainArray_RTP [row][column] = \
-#        WaveDomainArray [row][column] * \
-#        1j * kw / (l*kx_array[row][column] + m*ky_array[row][column] + 1j*n*kw)
+        A = (l*kx_array[row][column] + m*ky_array[row][column] + 1j*n*kw)
+
+        WaveDomainArray_RTP [row][column] = \
+        WaveDomainArray [row][column] * \
+        1j * kw / A
         
         # Double reduction au pole (vecteurs champ magnetique et aimantation)
 
 
+print WaveDomainArray_RTP
 
 
-TargetArray_prol = Arrayifft2(WaveDomainArray_prol)
-TargetArray_der1 = Arrayifft2(WaveDomainArray_der1)
-#TargetArray_RTP  = Arrayifft2(WaveDomainArray_RTP)
+#TargetArray_prol = Arrayifft2(WaveDomainArray_prol)
+#TargetArray_der1 = Arrayifft2(WaveDomainArray_der1)
+TargetArray_RTP  = Arrayifft2(fftshift(WaveDomainArray_RTP))
+print TargetArray_RTP
 TargetType = SourceType
 NDV = -99999
 
 # Export
-CreateGeoGrid(FileName, TargetFileName_prol, xsize, ysize, TargetType, TargetArray_prol, NDV)
-CreateGeoGrid(FileName, TargetFileName_der1, xsize, ysize, TargetType, TargetArray_der1, NDV)
-#CreateGeoGrid(FileName, TargetFileName_RTP, xsize, ysize, TargetType, TargetArray_RTP, NDV)
+#CreateGeoGrid(FileName, TargetFileName_prol, xsize, ysize, TargetType, TargetArray_prol, NDV)
+#CreateGeoGrid(FileName, TargetFileName_der1, xsize, ysize, TargetType, TargetArray_der1, NDV)
+CreateGeoGrid(FileName, TargetFileName_RTP, xsize, ysize, TargetType, TargetArray_RTP, NDV)
