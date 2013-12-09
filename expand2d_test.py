@@ -10,10 +10,9 @@ Testing stsci.imagemanip.interp2d.expand2d
 from GridIO import GetGeoGrid
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from stsci.imagemanip.interp2d import expand2d
-import stsci
+from interp2d import expand2d
 
-stsci.imagemanip.interp2d.expand2d()
+
 
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
@@ -23,33 +22,34 @@ TargetFileName =   'data/can1k_mag_NAD83_crop02_UTM_contpad.tiff'
 SourceOriginX, SourceOriginY, SourcePixelWidth, SourcePixelHeight, Projection, Bands, \
 SourceType, NDV, xsize, ysize, SourceArray, SourceStats = GetGeoGrid(FileName)
 
-# extrapolate
+# extrapolate 2D array using expand2d which uses bilinearinter
+# expand2d(image, outputsize)
+# This function expands an input 2D data array to larger dimensions using bilinear interpolation.
+# Parameters :
+#     image : ndarray
+#             Input image as numpy array
+#     outputsize : tuple
+#             Shape tuple describing the size of the output image
+# Returns :
+#     newimage : ndarray
+#             bilinearly interpolated array with shape specified by outputsize parameter
+
+# Calculate output array shape
 SourceShape = SourceArray.shape
 print 'Source shape = ', SourceShape
-Col = SourceShape [1] #x length
-Row = SourceShape [0] #y length
-TempArray = expand2d(SourceArray,(Col*2, Row*2))
+TargetShape = (SourceShape [0] * 2, SourceShape [1] * 2) 
+print 'Target shape = ', TargetShape
 
-print 'Expand2d shape = ', TempArray.shape
+# Extrapolate array to new dimensions
+TargetArray = expand2d(SourceArray,TargetShape)
 
+# Plotting using pyplot
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
 
 ax1.set_title('Source array')
 im1 = ax1.imshow(SourceArray, aspect='equal', cmap=cm.jet)
 
 ax2.set_title('Extrapolated array')
-im1 = ax2.imshow(TempArray, aspect='equal', cmap=cm.jet)
+im1 = ax2.imshow(TargetArray, aspect='equal', cmap=cm.jet)
 
 fig.show()
-
-# 
-#TargetArray = TempArray_proc
-#TargetType = SourceType
-#NDV = -99999
-
-## Plot array
-#ArrayPlot(SourceArray, TargetArray,SourceOriginX, SourceOriginY, \
-#SourcePixelWidth, SourcePixelHeight, SameCB=True)
-
-## Export
-#CreateGeoGrid(FileName, TargetFileName, xsize, ysize, TargetType, TargetArray, NDV)
