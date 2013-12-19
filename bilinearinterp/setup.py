@@ -2,6 +2,7 @@
 
 from distutils.core import setup, Extension
 import numpy.distutils.misc_util
+from Cython.Distutils import build_ext
 
  
 bilinearinterp_module = Extension('bilinearinterp',
@@ -19,4 +20,5 @@ setup (name = 'bilinearinterp',
        description = """bilinear interpolation for 2D array extrapolation""",
        ext_modules = [bilinearinterp_module],
        py_modules = ["bilinearinterp"],
+       cmdclass = {'build_ext': build_ext},
        )

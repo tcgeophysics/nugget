@@ -10,9 +10,9 @@ Testing stsci.imagemanip.interp2d.expand2d
 from GridIO import GetGeoGrid
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from interp2d import expand2d
-
-
+from scipy import interpolate
+import numpy
+#from bob import sp
 
 
 FileName       =   'data/can1k_mag_NAD83_crop02_UTM.tiff'
@@ -40,8 +40,44 @@ print 'Source shape = ', SourceShape
 TargetShape = (SourceShape [0] * 2, SourceShape [1] * 2) 
 print 'Target shape = ', TargetShape
 
+SourceMaxX = SourceOriginX + xsize * SourcePixelWidth
+SourceMinY = SourceOriginY + ysize * SourcePixelHeight
+print SourceOriginX, SourceMaxX, SourcePixelWidth
+print SourceOriginY, SourceMinY, SourcePixelHeight
+x = numpy.linspace(SourceOriginX, SourceMaxX, xsize)
+y = numpy.linspace(SourceMinY, SourceOriginY, ysize)
+
+xminTarget = SourceOriginX - xsize * SourcePixelWidth
+xmaxTarget = SourceOriginX + xsize * 2 * SourcePixelWidth
+ymaxTarget = SourceOriginY + ysize * -1 * SourcePixelHeight
+yminTarget = SourceOriginY + ysize * 2 * SourcePixelHeight
+print xminTarget, xmaxTarget, yminTarget, ymaxTarget
+
+xTarget = numpy.linspace(xminTarget, xmaxTarget, xsize * 3)
+yTarget = numpy.linspace(yminTarget, ymaxTarget, ysize * 3)
+
 # Extrapolate array to new dimensions
-TargetArray = expand2d(SourceArray,TargetShape)
+#TargetArray = expand2d(SourceArray,TargetShape)
+
+## Using scipy.interpolate.RectBivariateSpline(x,y,z)
+## and scipy.interpolate.RectBivariateSpline.__call__(x,y)
+print 'here ', xsize, ysize, SourceArray.shape, x.shape, y.shape,
+MySpline = interpolate.RectBivariateSpline(y, x, SourceArray)
+TargetArray = MySpline.__call__(yTarget, xTarget)
+
+## Using scipy.interpolate.interp2d(x, y, z, kind='linear')
+## kind : linear, cubic, quintic
+MySpline = interpolate.interp2d(x, y, SourceArray, kind='cubic')
+
+TargetArray = MySpline(xTarget, yTarget)
+
+## Using bob.sp.extrapolate_mirror
+#TargetArray = numpy.zeros( (Nr,Nc) , dtype = float )
+#MySpline = sp.extrapolate_mirror(SourceArray, )
+
+## Using stsci.imagemanip.interp2d.expand2d
+#TargetArray = expand2d (SourceArray,TargetShape)
+
 
 # Plotting using pyplot
 fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6))
