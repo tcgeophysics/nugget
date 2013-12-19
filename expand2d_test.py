@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy import interpolate
 import numpy
+import stsci.imagemanip.interp2d as interp2d
 #from bob import sp
 
 
@@ -61,22 +62,23 @@ yTarget = numpy.linspace(yminTarget, ymaxTarget, ysize * 3)
 
 ## Using scipy.interpolate.RectBivariateSpline(x,y,z)
 ## and scipy.interpolate.RectBivariateSpline.__call__(x,y)
-print 'here ', xsize, ysize, SourceArray.shape, x.shape, y.shape,
-MySpline = interpolate.RectBivariateSpline(y, x, SourceArray)
-TargetArray = MySpline.__call__(yTarget, xTarget)
+#print 'here ', xsize, ysize, SourceArray.shape, x.shape, y.shape,
+#MySpline = interpolate.RectBivariateSpline(y, x, SourceArray)
+#TargetArray = MySpline.__call__(yTarget, xTarget)
 
 ## Using scipy.interpolate.interp2d(x, y, z, kind='linear')
 ## kind : linear, cubic, quintic
-MySpline = interpolate.interp2d(x, y, SourceArray, kind='cubic')
-
-TargetArray = MySpline(xTarget, yTarget)
+#MySpline = interpolate.interp2d(x, y, SourceArray, kind='cubic')
+#
+#TargetArray = MySpline(xTarget, yTarget)
 
 ## Using bob.sp.extrapolate_mirror
 #TargetArray = numpy.zeros( (Nr,Nc) , dtype = float )
 #MySpline = sp.extrapolate_mirror(SourceArray, )
 
 ## Using stsci.imagemanip.interp2d.expand2d
-#TargetArray = expand2d (SourceArray,TargetShape)
+## Check function call
+TargetArray = interp2d.expand2d (SourceArray,TargetShape)
 
 
 # Plotting using pyplot
